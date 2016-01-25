@@ -1,0 +1,7 @@
+rm -f build/filesys.dsk
+cd build
+pintos-mkdisk filesys.dsk --filesys-size=2
+pintos --qemu -- -f -q
+pintos --qemu -p ../../examples/my -a my -- -q
+pintos --qemu -- -q run 'my'
+cd ..
