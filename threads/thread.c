@@ -113,7 +113,7 @@ thread_start (void)
   /* Create the idle thread. */
   struct semaphore idle_started;
 
-  init_info (initial_thread, initial_thread->tid);
+  //init_info (initial_thread, initial_thread->tid);
   
   sema_init (&idle_started, 0);
   thread_create ("idle", PRI_MIN, idle, &idle_started);
@@ -472,7 +472,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
 
-  t->is_kernel = is_kernel;
+  //t->is_kernel = is_kernel;
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
