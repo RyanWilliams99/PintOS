@@ -46,14 +46,16 @@ process_execute (const char *file_name)
   return tid;
 }
 
+
 /* A thread function that loads a user process and starts it
    running. */
-static void
-start_process (void *file_name_)
+static void start_process (void *file_name_)
 {
-  char *file_name = file_name_;
-  struct intr_frame if_;
-  bool success;
+    char *temp;
+    char *file_name = strtok_r(file_name_, " ", &temp);
+
+    struct intr_frame if_;
+    bool success;
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -77,6 +79,8 @@ start_process (void *file_name_)
   asm volatile ("movl %0, %%esp; jmp intr_exit" : : "g" (&if_) : "memory");
   NOT_REACHED ();
 }
+
+
 
 /* Waits for thread TID to die and returns its exit status.  If
    it was terminated by the kernel (i.e. killed due to an
@@ -443,7 +447,7 @@ setup_stack (void **esp)
     {
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
       if (success) {
-        *esp = PHYS_BASE;
+        *esp = PHYS_BASE - 12;
       } else
         palloc_free_page (kpage);
     }

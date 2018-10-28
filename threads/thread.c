@@ -257,6 +257,11 @@ thread_name (void)
   return thread_current ()->name;
 }
 
+int exit_code (void)
+{
+  return thread_current ()->exit_code;
+}
+
 /* Returns the running thread.
    This is running_thread() plus a couple of sanity checks.
    See the big comment at the top of thread.h for details. */
