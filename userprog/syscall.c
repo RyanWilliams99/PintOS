@@ -16,9 +16,45 @@ syscall_init (void)
 static void
 syscall_handler (struct intr_frame *f UNUSED)
 {
-  char *temp2;
-  char *thread_name_split = strtok_r(thread_name(), " ", &temp2);
-  printf("system call!\n");
-  printf("%s: exit(%d) ", thread_name_split, exit_code());
-  thread_exit ();
+    uint32_t *p=f->esp; // get the syscall number, which is defined in ‘Pintos/lib/syscall-nr.h’)
+
+    //Then implement syscalls
+    switch(*p)
+    {
+        case SYS_HALT: {
+            shutdown();
+            break;
+        }
+        case SYS_EXIT: {
+            struct thread *current = thread_current();
+            //current->process_info->exit_status = status; // or exit_code.
+            thread_exit();
+        }
+        case SYS_WRITE: {
+            /*Add by lsc Working*/
+            //printf("<2> In SYS_WRITE: %d\n", *p);
+            int buffer  = 0;
+            int fd = *(int *)(f->esp + 4);
+            unsigned size = *(unsigned *)(f->esp + 12);
+            int written_size = process_write(fd,buffer ,size);
+            f->eax = written_size;
+            break;
+        }
+        default: {
+            printf("SYS_CALL (%d) not implemented\n", *p);
+            thread_exit();
+        }
+    }
 }
+
+void halt(void)
+{
+    shutdown_power_off();
+}
+
+
+//char *temp2;
+//char *thread_name_split = strtok_r(thread_name(), " ", &temp2);
+//printf("system call!\n");
+//printf("%s: exit(%d) ", thread_name_split, exit_code());
+//thread_exit ();
