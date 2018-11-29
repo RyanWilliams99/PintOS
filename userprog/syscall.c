@@ -29,15 +29,20 @@ syscall_handler (struct intr_frame *f UNUSED)
             struct thread *current = thread_current();
             //current->process_info->exit_status = status; // or exit_code.
             thread_exit();
+            break;
         }
         case SYS_WRITE: {
             /*Add by lsc Working*/
-            //printf("<2> In SYS_WRITE: %d\n", *p);
-            int buffer  = 0;
-            int fd = *(int *)(f->esp + 4);
+            printf("<2> In SYS_WRITE: %d\n", *p);
+            int fd =*(int *)(f->esp + 4);
+            void *buffer = *(char**) (f->esp + 8);
             unsigned size = *(unsigned *)(f->esp + 12);
-            int written_size = process_write(fd,buffer ,size);
-            f->eax = written_size;
+            if(fd==STDOUT_FILENO) {
+                putbuf((const char*)buffer, (unsigned ) size);
+            }
+            else {
+                printf("sys_write does not support fd output\n");
+            }
             break;
         }
         default: {

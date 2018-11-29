@@ -297,7 +297,6 @@ thread_exit (void)
 {
   char *temp2;
   char *thread_name_split = strtok_r(thread_name(), " ", &temp2);
-  printf("system call!\n");
   printf("%s: exit(%d) ", thread_name_split, exit_code());
   ASSERT (!intr_context ());
 

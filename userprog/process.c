@@ -42,9 +42,6 @@ process_execute (const char *file_name)
     fn_copy = palloc_get_page (0);
     if (fn_copy == NULL)
         return TID_ERROR;
-    printf("File name printed below\n");
-    printf(file_name);
-    printf("\n");
     strlcpy (fn_copy, file_name, PGSIZE);
 
 
@@ -497,7 +494,7 @@ static bool setup_stack(void **esp, char **argv, int argc)
         }else
             palloc_free_page (kpage);
     }
-    hex_dump(*esp, *esp, 104, true);
+    hex_dump(*esp, *esp, PHYS_BASE-(*esp), true);
     ///hex_dump((uintptr_t) mem_loc, mem_loc, no_of_bytes, true);
     return success;
 }
