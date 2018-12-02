@@ -19,38 +19,35 @@
 #include "threads/vaddr.h"
 
 static thread_func start_process NO_RETURN;
-static bool load (const char *cmdline, void (**eip) (void), void **esp);
+static bool load (const char *cmdline, void (**eip) (void), void **esp); //Added 2 more arguments for load function
 
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
    before process_execute() returns.  Returns the new process's
    thread id, or TID_ERROR if the thread cannot be created. */
 tid_t
-process_execute (const char *file_name)
+process_execute (const char *command_line)
 {
 
     tid_t tid;
-
-    char *fn_copy;
-
-    char *save_ptr;
-    char *command_name;
-    char *cmd_string;
+    char *command_line_copy; //Used to make a copy of the command line
+    char *save_ptr; //Used to store the remaining chars from strtok_r
+    char *command_name; //Extracted command name
 
     /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
     fn_copy = palloc_get_page (0);
-    if (fn_copy == NULL)
+    if (command_line_copy == NULL)
         return TID_ERROR;
-    strlcpy (fn_copy, file_name, PGSIZE);
+    strlcpy (command_line_copy, command_line, PGSIZE);
 
-
-    command_name = strtok_r(file_name, " ", &save_ptr);
-    /* Create a new thread to execute FILE_NAME. */
-    tid = thread_create (command_name, PRI_DEFAULT, start_process, fn_copy);
+    //Extract the command name to a new char array called command name
+    command_name = strtok_r(command_line, " ", &save_ptr);
+    /* Create a new thread to execute FILE_NAME. Also passing command_line_copy*/
+    tid = thread_create (command_name, PRI_DEFAULT, start_process, command_line_copy);
 
     if (tid == TID_ERROR)
-        palloc_free_page (fn_copy);
+        palloc_free_page (command_line_copy);
     return tid;
 }
 
@@ -220,7 +217,7 @@ static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
    and its initial stack pointer into *ESP.
    Returns true if successful, false otherwise. */
 bool
-load (const char *file_name, void (**eip) (void), void **esp)
+load (const char *file_name, void (**eip) (void), void **esp) //Allowed 2 more parameters to be passed
 {
     struct thread *t = thread_current ();
     struct Elf32_Ehdr ehdr;
@@ -229,20 +226,18 @@ load (const char *file_name, void (**eip) (void), void **esp)
     bool success = false;
     int i;
 
-    char file_name_copy[100];
-    strlcpy(file_name_copy, file_name, 100);
-    char *argv[255];
-    int argc;
-    char *save_ptr;
-    char * cmd_string = file_name;
-    argv[0] = strtok_r(cmd_string, " ", &save_ptr);
+    char file_name_copy[100]; //Declare char array tos tore copy of file name
+    strlcpy(file_name_copy, file_name, 100); //Copy to file name copy
+    char *argv[255]; //declare argv char array
+    int argc; //Number of arguments counter
+    char *save_ptr; //Used to store left overs from strtok_r
+    char * cmd_string = file_name; //Preserves original file name
     char *token;
-    argc = 0;
-    char arguments[100];
 
+    //Enters a for loop string the variables in argv then incrementing the number of arguments stored
     for (token = strtok_r (file_name_copy, " ", &save_ptr); token != NULL; token = strtok_r (NULL, " ", &save_ptr)) {
         argv[(argc)++] = token;
-       //printf("'%s'\n", token);
+        argc++;
     }
 
 
@@ -333,7 +328,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
         }
     }
 
-    /* Set up stack. */
+    /* Set up stack. */ //Added additional arguments for the arguments
     if (!setup_stack (esp, argv, argc))
         goto done;
 
@@ -471,13 +466,13 @@ static bool setup_stack(void **esp, char **argv, int argc)
             int i = argc;
             // this array holds reference to differences arguments in the stack
             uint32_t * arr[argc];
-            while(--i >= 0)
+            while(--i >= 0) //While number of arguments - 1 is more than 0
             {
-                *esp = *esp - (strlen(argv[i])+1)*sizeof(char);
+                *esp = *esp - (strlen(argv[i])+1)*sizeof(char); //Add the item to the stack
                 arr[i] = (uint32_t *)*esp;
-                memcpy(*esp,argv[i],strlen(argv[i])+1);
+                memcpy(*esp,argv[i],strlen(argv[i])+1); //Copys the blocks of memory
             }
-            *esp = *esp - 4;
+            *esp = *esp - 4; //
             (*(int *)(*esp)) = 0;//sentinel
             i = argc;
             while( --i >= 0)
@@ -494,8 +489,8 @@ static bool setup_stack(void **esp, char **argv, int argc)
         }else
             palloc_free_page (kpage);
     }
+    //Prints the stack to console for debuging
     hex_dump(*esp, *esp, PHYS_BASE-(*esp), true);
-    ///hex_dump((uintptr_t) mem_loc, mem_loc, no_of_bytes, true);
     return success;
 }
 

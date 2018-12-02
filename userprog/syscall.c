@@ -21,11 +21,13 @@ syscall_handler (struct intr_frame *f UNUSED)
     //Then implement syscalls
     switch(*p)
     {
-        case SYS_HALT: {
+        case SYS_HALT: { //Tested and works as expected
+            printf("Syscall number %d is called SYS_HALT\n",*p);
             shutdown();
             break;
         }
-        case SYS_EXIT: {
+        case SYS_EXIT: { //Tested and works as expected
+            printf("Syscall number %d is called SYS_EXIT\n",*p);
             struct thread *current = thread_current();
             //current->process_info->exit_status = status; // or exit_code.
             thread_exit();
@@ -56,10 +58,3 @@ void halt(void)
 {
     shutdown_power_off();
 }
-
-
-//char *temp2;
-//char *thread_name_split = strtok_r(thread_name(), " ", &temp2);
-//printf("system call!\n");
-//printf("%s: exit(%d) ", thread_name_split, exit_code());
-//thread_exit ();
