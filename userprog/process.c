@@ -37,6 +37,7 @@ process_execute (const char *file_name)
     char *command_name;
     char *cmd_string;
 
+
     /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
     fn_copy = palloc_get_page (0);
@@ -465,10 +466,10 @@ static bool setup_stack(void **esp, char **argv, int argc)
     kpage = palloc_get_page (PAL_USER | PAL_ZERO);
     if (kpage != NULL)
     {
-        success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
+        success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true); //get sucess value
         if (success) {
             *esp = PHYS_BASE;
-            int i = argc;
+            int i = argc; //Number of arguments
             // this array holds reference to differences arguments in the stack
             uint32_t * arr[argc];
             while(--i >= 0)
