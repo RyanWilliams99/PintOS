@@ -19,7 +19,7 @@
 #include "threads/vaddr.h"
 
 static thread_func start_process NO_RETURN;
-static bool load (const char *cmdline, void (**eip) (void), void **esp);
+static bool load (const char *cmdline, void (**eip) (void), void **esp); //Add 2 extra parameters
 
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
@@ -31,26 +31,25 @@ process_execute (const char *file_name)
 
     tid_t tid;
 
-    char *fn_copy;
+    char *fn_copy; //Preserves the file name
 
-    char *save_ptr;
-    char *command_name;
-    char *cmd_string;
+    char *save_ptr; //Contains the remaining string
+    char *command_name; //Stores the command name after strtok
 
     /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
     fn_copy = palloc_get_page (0);
     if (fn_copy == NULL)
         return TID_ERROR;
-    strlcpy (fn_copy, file_name, PGSIZE);
+    strlcpy (fn_copy, file_name, PGSIZE); //Copy file name to fn_copy
 
 
-    command_name = strtok_r(file_name, " ", &save_ptr);
+    command_name = strtok_r(file_name, " ", &save_ptr); //Split string
     /* Create a new thread to execute FILE_NAME. */
-    tid = thread_create (command_name, PRI_DEFAULT, start_process, fn_copy);
+    tid = thread_create (command_name, PRI_DEFAULT, start_process, fn_copy); //Create a new thread using the command name
 
     if (tid == TID_ERROR)
-        palloc_free_page (fn_copy);
+        palloc_free_page (fn_copy); //Free page from memory if there is an error
     return tid;
 }
 
@@ -465,13 +464,13 @@ static bool setup_stack(void **esp, char **argv, int argc)
     kpage = palloc_get_page (PAL_USER | PAL_ZERO);
     if (kpage != NULL)
     {
-        success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
+        success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true); //get sucess value
         if (success) {
             *esp = PHYS_BASE;
-            int i = argc;
+            int i = argc; //Number of arguments
             // this array holds reference to differences arguments in the stack
             uint32_t * arr[argc];
-            while(--i >= 0)
+            while(--i >= 0) //While number of arguments - 1 is more than 0 
             {
                 *esp = *esp - (strlen(argv[i])+1)*sizeof(char);
                 arr[i] = (uint32_t *)*esp;
