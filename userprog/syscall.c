@@ -69,6 +69,10 @@ syscall_handler (struct intr_frame *f UNUSED)
             break;
         }
         case SYS_FILESIZE: {
+            int filesize(int fd)
+            {
+
+            }
             printf("In Syscall number %d, SYS_FILESIZE\n",*p);
             break;
         }

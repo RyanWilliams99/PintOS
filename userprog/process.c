@@ -30,12 +30,9 @@ process_execute (const char *file_name)
 {
 
     tid_t tid;
-
     char *fn_copy;
-
     char *save_ptr;
-    char *command_name;
-    char *cmd_string;
+    char *command_name; //used to store the extracted command name
 
 
     /* Make a copy of FILE_NAME.
@@ -45,7 +42,7 @@ process_execute (const char *file_name)
         return TID_ERROR;
     strlcpy (fn_copy, file_name, PGSIZE);
 
-
+    //Extracts the file name then creates a new thread
     command_name = strtok_r(file_name, " ", &save_ptr);
     /* Create a new thread to execute FILE_NAME. */
     tid = thread_create (command_name, PRI_DEFAULT, start_process, fn_copy);
@@ -230,20 +227,20 @@ load (const char *file_name, void (**eip) (void), void **esp)
     bool success = false;
     int i;
 
-    char file_name_copy[100];
-    strlcpy(file_name_copy, file_name, 100);
-    char *argv[255];
-    int argc;
+    char file_name_copy[100]; //Used to store a copy of the passed file name
+    strlcpy(file_name_copy, file_name, 100); //Make a copy
+    char *argv[255]; //Stores the arguments
+    int argc; //Stores the number fo arguments
     char *save_ptr;
     char * cmd_string = file_name;
     argv[0] = strtok_r(cmd_string, " ", &save_ptr);
     char *token;
     argc = 0;
     char arguments[100];
-
+    //Loop through storing arguments into argv
     for (token = strtok_r (file_name_copy, " ", &save_ptr); token != NULL; token = strtok_r (NULL, " ", &save_ptr)) {
+        //Add a new argument then increment the number of arguments
         argv[(argc)++] = token;
-       //printf("'%s'\n", token);
     }
 
 
