@@ -30,9 +30,9 @@ process_execute (const char *file_name)
 {
 
     tid_t tid;
-    char *fn_copy;
-    char *save_ptr;
-    char *command_name; //used to store the extracted command name
+    char *fn_copy; //Stores a copy of file name
+    char *save_ptr; //Used internally by strtok_r
+    char *command_name; //Used to store the extracted command name
 
 
     /* Make a copy of FILE_NAME.
@@ -231,12 +231,11 @@ load (const char *file_name, void (**eip) (void), void **esp)
     strlcpy(file_name_copy, file_name, 100); //Make a copy
     char *argv[255]; //Stores the arguments
     int argc; //Stores the number fo arguments
-    char *save_ptr;
-    char * cmd_string = file_name;
-    argv[0] = strtok_r(cmd_string, " ", &save_ptr);
-    char *token;
-    argc = 0;
-    char arguments[100];
+    char *save_ptr; //Used internally by strtok_r
+    argv[0] = strtok_r(file_name, " ", &save_ptr); //Takes the command from the string
+    char *token; //Temporarily stores each argument in the for loop
+    argc = 0; //Sets number of arguments = 0
+
     //Loop through storing arguments into argv
     for (token = strtok_r (file_name_copy, " ", &save_ptr); token != NULL; token = strtok_r (NULL, " ", &save_ptr)) {
         //Add a new argument then increment the number of arguments
@@ -463,19 +462,21 @@ static bool setup_stack(void **esp, char **argv, int argc)
     kpage = palloc_get_page (PAL_USER | PAL_ZERO);
     if (kpage != NULL)
     {
-        success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true); //get sucess value
+        success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true); //Get sucess value
         if (success) {
-            *esp = PHYS_BASE;
+            *esp = PHYS_BASE; //Sets stack pointer equal to constant PHYSBASE
             int i = argc; //Number of arguments
             // this array holds reference to differences arguments in the stack
-            uint32_t * arr[argc];
-            while(--i >= 0)
+            uint32_t * arr[argc]; //Defines a pointer to a int
+            while(--i >= 0) //Starts at the end of the argv so it adds elements right to left
             {
+                //Allocates enough space to store the chars + 1 for NULL
                 *esp = *esp - (strlen(argv[i])+1)*sizeof(char);
                 arr[i] = (uint32_t *)*esp;
+                //Copies the chars to memory from right to left
                 memcpy(*esp,argv[i],strlen(argv[i])+1);
             }
-            *esp = *esp - 4;
+            *esp = *esp - 4; //Minus 4 from stack pointer
             (*(int *)(*esp)) = 0;//sentinel
             i = argc;
             while( --i >= 0)
@@ -483,15 +484,16 @@ static bool setup_stack(void **esp, char **argv, int argc)
                 *esp = *esp - 4;//32bit
                 (*(uint32_t **)(*esp)) = arr[i];
             }
-            *esp = *esp - 4;
+            *esp = *esp - 4; //Minus 4 from stack pointer
             (*(uintptr_t **)(*esp)) = (*esp+4);
-            *esp = *esp - 4;
+            *esp = *esp - 4; //Minus 4 from stack pointer
             *(int *)(*esp) = argc;
-            *esp = *esp - 4;
+            *esp = *esp - 4; //Minus 4 from stack pointer
             (*(int *)(*esp))=0;
         }else
             palloc_free_page (kpage);
     }
+    //Prints the stack for debugging
     hex_dump(*esp, *esp, PHYS_BASE-(*esp), true);
     return success;
 }
