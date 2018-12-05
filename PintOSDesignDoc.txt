@@ -1,0 +1,64 @@
++-----------------+
+| CS 140          |
+| SAMPLE PROJECT  |
+| DESIGN DOCUMENT |
++-----------------+
+
+---- GROUP ----
+Ryan Williams 17009972 <ryan6.williams@live.uwe.ac.uk>
+
+---- PRELIMINARIES ----
+Offcial Pintos.pdf
+
+---- DATA STRUCTURES ----
+Added new data structures to 3 files thread.c process.c and syscall.c
+--thread.c--
+	Added a new value called exit_code in thread struct
+	Added new fucntion that returns thread exit code that is defined in the thread struct
+	#ifdef USERPROG
+	int exit_code (void)
+	{
+	  return thread_current ()->exit_code;
+	}
+	#endif
+--process.c--
+	process_execute
+	char *fn_copy; //Stores a copy of file name 
+	char *save_ptr; //Used internally by strtok_r
+	char *command_name; //Used to store the extracted command name
+
+	load 
+	char file_name_copy[100]; //Used to store a copy of the passed file name
+	strlcpy(file_name_copy, file_name, 100); //Make a copy
+	char *argv[255]; //Stores the arguments
+	int argc; //Stores the number fo arguments
+	char *save_ptr; //Used internally by strtok_r
+	argv[0] = strtok_r(file_name, " ", &save_ptr); //Takes the command from the string 
+	char *token; //Temporarily stores each argument in the for loop
+	argc = 0; //Sets number of arguments = 0
+
+	setup_stack
+	*esp = PHYS_BASE; //Sets value
+    int i = argc; //Number of arguments
+--syscall.c--
+	uint32_t *p=f->esp; //Get the syscall number, which is defined in ‘Pintos/lib/syscall-nr.h’)
+
+---- ALGORITHMS ----
+
+----ARGUMENT PASSSING----
+1. In load fucntion extract arguments and store them in a char array called argv
+	a. Use a for loop to extract the arguments and store them in argv before incrementing argc
+2. In setup stack function push arguments on to stack
+	a. Use a while loop to add the arguments onto the stack from right to left. Eg. echo example 
+	will be added as "e" then "l" etc.
+	b. use hex_dump to view contents of the stack for debugging 
+	
+----SYSTEM CALLS----
+1.Added a new uint32 to store p
+2.Added a switch statement for system calls
+	2.1. SYS_WRITE
+		Call putbuf to put chars on the terminal 
+		
+---- RATIONALE ----
+My solution implements argument passsing after the load function i think this is optimal because 
+otherwise you could end up passing arguments before knowing if the user program loaded correctly.
