@@ -42,7 +42,7 @@ process_execute (const char *file_name)
         return TID_ERROR;
     strlcpy (fn_copy, file_name, PGSIZE);
 
-    //Extracts the file name then creates a new thread
+    //Extracts the file name then creates a new thread using the file name
     command_name = strtok_r(file_name, " ", &save_ptr);
     /* Create a new thread to execute FILE_NAME. */
     tid = thread_create (command_name, PRI_DEFAULT, start_process, fn_copy);
@@ -227,16 +227,16 @@ load (const char *file_name, void (**eip) (void), void **esp)
     bool success = false;
     int i;
 
-    char file_name_copy[100]; //Used to store a copy of the passed file name
+    char file_name_copy[100]; //Used to store a copy of file name
     strlcpy(file_name_copy, file_name, 100); //Make a copy
     char *argv[255]; //Stores the arguments
-    int argc; //Stores the number fo arguments
+    int argc; //Stores the number of arguments
     char *save_ptr; //Used internally by strtok_r
-    argv[0] = strtok_r(file_name, " ", &save_ptr); //Takes the command from the string
+    argv[0] = strtok_r(file_name, " ", &save_ptr); //Takes the command name from the file name
     char *token; //Temporarily stores each argument in the for loop
     argc = 0; //Sets number of arguments = 0
 
-    //Loop through storing arguments into argv
+    //Loop through storing arguments into argv (Stops when at the end of the string)
     for (token = strtok_r (file_name_copy, " ", &save_ptr); token != NULL; token = strtok_r (NULL, " ", &save_ptr)) {
         //Add a new argument then increment the number of arguments
         argv[(argc)++] = token;
@@ -464,7 +464,7 @@ static bool setup_stack(void **esp, char **argv, int argc)
     {
         success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true); //Get sucess value
         if (success) {
-            *esp = PHYS_BASE; //Sets stack pointer equal to constant PHYSBASE
+            *esp = PHYS_BASE; //Sets stack pointer equal to PHYSBASE
             int i = argc; //Number of arguments
             // this array holds reference to differences arguments in the stack
             uint32_t * arr[argc]; //Defines a pointer to a int
@@ -472,23 +472,23 @@ static bool setup_stack(void **esp, char **argv, int argc)
             {
                 //Allocates enough space to store the chars + 1 for NULL
                 *esp = *esp - (strlen(argv[i])+1)*sizeof(char);
-                arr[i] = (uint32_t *)*esp;
+                arr[i] = (uint32_t *)*esp; //Store the address pointing to each argument as they are pushed onto the stack
                 //Copies the chars to memory from right to left
-                memcpy(*esp,argv[i],strlen(argv[i])+1);
+                memcpy(*esp,argv[i],strlen(argv[i])+1); //Copy into memory
             }
-            *esp = *esp - 4; //Minus 4 from stack pointer
-            (*(int *)(*esp)) = 0;//sentinel
-            i = argc;
-            while( --i >= 0)
+            *esp -= 4; //Minus 4 from stack pointer
+            (*(int *)(*esp)) = 0; //Sentinel
+            i = argc; //Reset i to the number of arguments
+            while( --i >= 0) //For each argument store the addresses
             {
-                *esp = *esp - 4;//32bit
-                (*(uint32_t **)(*esp)) = arr[i];
+                *esp -= 4;//32bit
+                (*(uint32_t **)(*esp)) = arr[i]; //Write the address of each argument
             }
-            *esp = *esp - 4; //Minus 4 from stack pointer
+            *esp -= 4; //Minus 4 from stack pointer
             (*(uintptr_t **)(*esp)) = (*esp+4);
-            *esp = *esp - 4; //Minus 4 from stack pointer
+            *esp -= 4; //Minus 4 from stack pointer
             *(int *)(*esp) = argc;
-            *esp = *esp - 4; //Minus 4 from stack pointer
+            *esp -= 4; //Minus 4 from stack pointer
             (*(int *)(*esp))=0;
         }else
             palloc_free_page (kpage);
