@@ -9,28 +9,13 @@ static void syscall_handler (struct intr_frame *);
 void
 syscall_init (void)
 {
-    intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
+    intr_register_int(0x30, 3, INTR_ON, syscall_handler, "syscall");
 }
 
 static void
 syscall_handler (struct intr_frame *f UNUSED)
 {
     uint32_t *sys_code=f->esp; //Get the syscall number, which is defined in ‘Pintos/lib/syscall-nr.h’)
-
-
-    //SYS_HALT, /* Halt the operating system. */            DONE
-    //SYS_EXIT, /* Terminate this process. */               DONE
-    //SYS_EXEC, /* Start another process. */
-    //SYS_WAIT, /* Wait for a child process to die. */
-    //SYS_CREATE, /* Create a file. */
-    //SYS_REMOVE, /* Delete a file. */
-    //SYS_OPEN, /* Open a file. */
-    //SYS_FILESIZE, /* Obtain a file’s size. */
-    //SYS_READ, /* Read from a file. */
-    //SYS_WRITE, /* Write to a file. */                     DONE
-    //SYS_SEEK, /* Change position in a file. */
-    //SYS_TELL, /* Report current position in a file. */
-    //SYS_CLOSE, /* Close a file. */
 
 
     switch(*sys_code)
@@ -79,9 +64,9 @@ syscall_handler (struct intr_frame *f UNUSED)
         case SYS_WRITE: {
             /*Add by lsc Working*/
             printf("<2> In SYS_WRITE: %d\n", *sys_code);
-            int fd =*(int *)(f->esp + 4); //Get open file
-            void *buffer = *(char**) (f->esp + 8); //Gets buffer
-            unsigned size = *(unsigned *)(f->esp + 12); //Gets the size in bytes
+            int fd =*(int *)(f->esp + 4); //Get open file from stack
+            void *buffer = *(char**) (f->esp + 8); //Gets buffer from stack
+            unsigned size = *(unsigned *)(f->esp + 12); //Gets the size in bytes from stack
             if(fd==STDOUT_FILENO) {
                 putbuf((const char*)buffer, (unsigned ) size);
             }

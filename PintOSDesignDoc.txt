@@ -1,8 +1,8 @@
-+-----------------+
-| CS 140          |
-| SAMPLE PROJECT  |
-| DESIGN DOCUMENT |
-+-----------------+
+		+-----------------+
+		| CS 140          |
+		| SAMPLE PROJECT  |
+		| DESIGN DOCUMENT |
+		+-----------------+
 
 ---- GROUP ----
 Ryan Williams 17009972 <ryan6.williams@live.uwe.ac.uk>
@@ -11,10 +11,10 @@ Ryan Williams 17009972 <ryan6.williams@live.uwe.ac.uk>
 Offcial Pintos.pdf
 
 ---- DATA STRUCTURES ----
-Added new data structures to 3 files thread.c process.c and syscall.c
+Added new data structures to 3 files thread.c, process.c and syscall.c
 --thread.c--
-	Added a new value called exit_code in thread struct
-	Added new fucntion that returns thread exit code that is defined in the thread struct
+	Added a new value called exit_code in thread struct.
+	Added new fucntion that returns thread exit code that is defined in the thread struct.
 	#ifdef USERPROG
 	int exit_code (void)
 	{
@@ -22,43 +22,61 @@ Added new data structures to 3 files thread.c process.c and syscall.c
 	}
 	#endif
 --process.c--
-	process_execute
+	Function - process_execute
 	char *fn_copy; //Stores a copy of file name 
 	char *save_ptr; //Used internally by strtok_r
 	char *command_name; //Used to store the extracted command name
 
-	load 
+	Function - load 
 	char file_name_copy[100]; //Used to store a copy of the passed file name
 	strlcpy(file_name_copy, file_name, 100); //Make a copy
 	char *argv[255]; //Stores the arguments
 	int argc; //Stores the number fo arguments
 	char *save_ptr; //Used internally by strtok_r
-	argv[0] = strtok_r(file_name, " ", &save_ptr); //Takes the command from the string 
+	argv[0] = strtok_r(file_name, " ", &save_ptr); //Takes the command name from the file name 
 	char *token; //Temporarily stores each argument in the for loop
 	argc = 0; //Sets number of arguments = 0
 
-	setup_stack
+	Function - setup_stack
 	*esp = PHYS_BASE; //Sets value
     int i = argc; //Number of arguments
 --syscall.c--
 	uint32_t *p=f->esp; //Get the syscall number, which is defined in ‘Pintos/lib/syscall-nr.h’)
 
----- ALGORITHMS ----
 
-----ARGUMENT PASSSING----
-1. In load fucntion extract arguments and store them in a char array called argv
-	a. Use a for loop to extract the arguments and store them in argv before incrementing argc
-2. In setup stack function push arguments on to stack
-	a. Use a while loop to add the arguments onto the stack from right to left. Eg. echo example 
-	will be added as "e" then "l" etc.
-	b. use hex_dump to view contents of the stack for debugging 
+---- ALGORITHMS ----
+--ARGUMENT PASSSING--
+Originally pintOS simply passed the "file_name" to load and subsequently to setup stack, this meant that when a user tried to pass arguments it would pass the entire string. Before my implementation the system would interpret "echo example" as is and try to run a user program called "echo example" which would fail to load. After my implementaion the syste splits the first word using space as a delimiter then runs "echo" with the arguments example. Once this was implemented the system can correctly pass the command name and the arguments to the load function. This function then extracts all the arguemnts one at a time and stores them into argv. Finally setup_stack is called and passed the agruments esp, argv and argc. Esp is the stack pointer which was originally being passed to this function, argv is the char array in which the arguments are stored temporarilly before they are pushed onto the stack. argc is the number of arguments that were extracted in the load function this is then used to push arguments onto the stack, aswell as store the pointers for each of the arguments. In summary this is what my solution does:
+
+1.Call load using the extracted command name.
+2.Split the arguments up using space a delimiter.
+3.Store each of the arguments in argv.
+4.Store the number of arguments the system has stored. 
+5.Pass the stack pointer, arguemnts and number of arguments to the setup_stack function.
+6.Push each argument onto the stack from right to left (So they are in the correct order when popped off later).
+7.Store the address of each argument.
+
 	
-----SYSTEM CALLS----
-1.Added a new uint32 to store p
-2.Added a switch statement for system calls
-	2.1. SYS_WRITE
-		Call putbuf to put chars on the terminal 
+--SYSTEM CALLS--
+The Original version pintOS did not have system calls, instead it simply exited pintOS instead of using any system calls. Now when a user program needs to a use a system call it will get the sys_call number using the stack pointer, then go into a switch statement that will execute the relevant system call based off of the predifined System calls in syscall-nr.h. For example if the user now calls echo test example, then SYS_WRITE will be called 3 times and finally SYS_EXIT will be called. In summary this what my soluton does:
+
+1.Get sys_call number from stack.
+2.Compare the syscall number to the predifined values in syscall-nr.h.
+3.Get the required arguemtns from the stack for this syscall (Eg SYS_WRITE needs 3 arguments from stack).
+
+Below is simply what each system call:
+SYS_HALT /* Halt the operating system. */
+	Calls shutdown()
+SYS_EXIT /* Terminate this process. */ 
+	Calls thread_exit NOTE:Exit code is printed in thread_exit
+SYS_FILESIZE /* Obtain a file’s size. */
+	Get the first arguments from stack 
+	Return filesize value
+SYS_WRITE /* Write to a file. */ 
+	Get the file from stack.
+	Gets the buffer.
+	Gets the size of the buffer.
+	Pass to predefined function putbuf. 
 		
 ---- RATIONALE ----
-My solution implements argument passsing after the load function i think this is optimal because 
-otherwise you could end up passing arguments before knowing if the user program loaded correctly.
+My solution implements argument passsing after the load function, i think this is optimal because otherwise you could end up passing arguments before knowing if the user program loaded correctly. For example if echoa example is passed to the command line and if argument splitting was done before load then it would waste processing power splitting the arugment when the command "echoa" is invalid and cannot be loaded anyway.
